@@ -24,7 +24,7 @@ color_set = np.array([
 
 def plot_fixer(fig=None, ax=None, fsize=18, color=(0, 0, 0), tight_layout=True, line_width=4, fontweight='bold'):
     rc('font', weight=fontweight)
-    rcParams['text.latex.preamble'] = [r'\usepackage{sfmath} \boldmath']
+    rcParams['text.latex.preamble'] = r"\usepackage{sfmath} \boldmath"
     # fig.canvas.draw()
     if fig is None:
         fig = plt.gcf()

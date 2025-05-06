@@ -11,7 +11,7 @@ class Emission:
     """
     Stores all properties of all emissions that exist at a particular instant in a simulation.
     """
-    def __init__(self, flux=(), reparable=True, site_index=(), comp_index=(), start_time=0, end_time=np.infty,
+    def __init__(self, flux=(), reparable=True, site_index=(), comp_index=(), start_time=0, end_time=np.inf,
                  repair_cost=(), emission_id=None):
         """
         :param flux: An array of emission rates (array of floats--gram/second)
