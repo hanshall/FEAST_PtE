@@ -25,7 +25,10 @@ from scipy.special import erf #v1.15.2
 # USER INPUT
 sim_years = 5 #how many years should the simulation be run for? - Note- delta is 1 day, set inside define_time_settings  
 n_montecarlo = 10 #How many iterations of the model are we running? 
-write_out_location = 'EPA_Trial_Run/Run_Results_Rewrite'
+write_out_location = 'EPA_Trial_Run/run_results_loop_test'
+
+#LOOPING INSTRUCTIONS
+cadence_values = {'monthly': 30, 'bimonthly': 60, 'quarterly': 91, 'semiannual':182, 'annual': 365}
 
 #GAS FIELD SETUP 
 mpStr = 'Model Plant 4' #Which model plant are we using in the simulation? 
@@ -66,7 +69,7 @@ ogi_detection_points= np.array([0.0042, 0.0063, 0.0083, 0.012, 0.0166]) #Detecti
 ogi_detection_probabilities= np.array([0, 0.25, 0.5, 0.75, 1]) #Detecion Distribution, probabilities 
 
 #Periodic Survey Settings - General 
-survey_interval_periodic = 30 #return period for the tech in days
+# survey_interval_periodic = 30 #return period for the tech in days
 survey_sites_periodic = 200 #how many sites are observed each survey day 
 survey_cost_periodic = 100 #USD/Site cost for the survey
 survey_ophrs_periodic = {'begin': 8, 'end': 17}
@@ -80,6 +83,7 @@ survey_cost_sat = 100 #USD/Site cost for the survey
 survey_ophrs_sat = {'begin': 9, 'end': 16}
 sat_detection_points = [6.94, 10.4, 13.9, 20.8, 27.8] #detection Distribution, g/s (set 100% at 100 kg/hr)
 sat_detection_probabilities = np.array([0, 0.25, 0.5, 0.75, 1]) #Detecion Distribution, probabilities
+
 
 
 ###############################################################################
@@ -363,11 +367,7 @@ def define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_s
         copy.deepcopy(gas_field), tech_dict,
     )
 
-
-   
-    
-    #### RS EDIT (5/18/22): Added 'plane2' entry
-    # All programs
+    # Combine All programs into a directory: 
     ldar_dict = {
         'quarterly_ogi': ogi_survey,
         'periodic': periodic_survey_LDAR,
@@ -380,16 +380,25 @@ def define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_s
     return ldar_dict
 
 
-for ind in range(n_montecarlo):
-    print('Iteration number: {:0.0f}'.format(ind))
-    comp_leak, comp_tank, comp_super = define_emitters()
-    site_dict = define_sites(comp_leak, comp_tank, comp_super, mpStr)
-    timeobj = define_time_settings()
-    gas_field = define_gas_field(timeobj, site_dict)
-    ogi_quarterly, ogi_called_survey, ogi_called_survey_sat, ogi_annual_survey, periodic_survey, large_event_survey = define_detection_methods(timeobj) 
-    ldar_dict = define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_survey, large_event_survey) #### RS EDIT (5/18/22)
-    scenario = sc.Scenario(time=timeobj, gas_field=gas_field, ldar_program_dict=ldar_dict)
-    scenario.run(dir_out=write_out_location, display_status=True, save_method='json')
+#Setting up the looped verision of this code to run through different iterations, Creating and writing to new subfolders. 
+for iter in cadence_values:
+    #set the cadendce in days:
+    survey_interval_periodic = cadence_values[iter]
+    #and the folder name:
+    write_folder = write_out_location + '/Loop_2kg_' + str(iter)
+
+    os.mkdir(write_folder)
+
+    for ind in range(n_montecarlo):
+        print('Iteration number: {:0.0f}'.format(ind))
+        comp_leak, comp_tank, comp_super = define_emitters()
+        site_dict = define_sites(comp_leak, comp_tank, comp_super, mpStr)
+        timeobj = define_time_settings()
+        gas_field = define_gas_field(timeobj, site_dict)
+        ogi_quarterly, ogi_called_survey, ogi_called_survey_sat, ogi_annual_survey, periodic_survey, large_event_survey = define_detection_methods(timeobj) 
+        ldar_dict = define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_survey, large_event_survey)
+        scenario = sc.Scenario(time=timeobj, gas_field=gas_field, ldar_program_dict=ldar_dict)
+        scenario.run(dir_out=write_folder, display_status=True, save_method='json')
 
 b = time.time()
 print("run time {:0.2f} seconds".format(b - a))
