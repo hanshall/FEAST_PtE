@@ -5,9 +5,10 @@ This builds from the example script from RTI and the FEAST example run file.
 Running: Python 3.12.4 
 
 V1.0 Date: 2025-06
+v1.5 Date: 2025-06
 
 Updates Tracking List: 
-(add updates here)
+V1.5 - adding copy.deepcopy to all of the called variables to prevent crosstalk, especially in the LDAR definitions.   
 """
 import numpy as np #v2.2.3
 import copy
@@ -26,6 +27,7 @@ from scipy.special import erf #v1.15.2
 sim_years = 5 #how many years should the simulation be run for? - Note- delta is 1 day, set inside define_time_settings  
 n_montecarlo = 10 #How many iterations of the model are we running? 
 write_out_location = 'EPA_Trial_Run/run_results_loop_test'
+Set_periodic_threshold = 5 #detection threshold of the periodic survey in kg/hr 
 
 #LOOPING INSTRUCTIONS
 cadence_values = {'monthly': 30, 'bimonthly': 60, 'quarterly': 91, 'semiannual':182, 'annual': 365}
@@ -52,17 +54,17 @@ comp_emissions_rate_tanks = (0.025 / 365) # number of new emissions per componen
 #Super Emitters 
 emission_distribution_super = 'EPA_Trial_Run/Setup_Files/Comp_Super.p'
 comp_emissions_start_super = (0.5/96 + 0.0000001) #Fraction of components expected to be emissting at the beginnging of the simulation
-comp_emissions_rate_super = (0.005 / 365) # number of new emissions per component per day
+comp_emissions_rate_super = (0.015 / 365) # number of new emissions per component per day
 
 #TECHNOLOGY SETUP 
 # All technologies have: detection_variables={'flux': 'mean'}, and site_queue = [] 
 #Repair Delays
 OGI_rep_delay = 30 #OGI repair delay in days
-survey_rep_delay = 35 #Periodic survey repair delay in days
+survey_rep_delay = 35 #Periodic survey repair delay in days 
 sat_rep_delay = 45 #Satellite survey repair delay in days 
 
 #OGI Settings - General
-survey_speed_comp_ogi = 150 #Survey speed in components/hour 
+survey_speed_comp_ogi = 400 #Survey speed in components/hour 
 suvey_labor_cost_ogi = 100 #survey cost USD/HR 
 survey_ophrs_ogi = {'begin': 8, 'end': 17}
 ogi_detection_points= np.array([0.0042, 0.0063, 0.0083, 0.012, 0.0166]) #Detection distribution, g/s
@@ -70,14 +72,14 @@ ogi_detection_probabilities= np.array([0, 0.25, 0.5, 0.75, 1]) #Detecion Distrib
 
 #Periodic Survey Settings - General 
 # survey_interval_periodic = 30 #return period for the tech in days
-survey_sites_periodic = 200 #how many sites are observed each survey day 
+survey_sites_periodic = 100 #how many sites are observed each survey day 
 survey_cost_periodic = 100 #USD/Site cost for the survey
 survey_ophrs_periodic = {'begin': 8, 'end': 17}
-periodic_detection_points = np.array([0.14, 0.21, 0.28, 0.42, 0.56]) #detection Distribution, g/s
+periodic_detection_points = np.array([0.347, 0.521, 0.694, 1.042, 1.389]) #detection Distribution, g/s
 periodic_detection_probabilities = np.array([0, 0.25, 0.5, 0.75, 1]) #Detecion Distribution, probabilities
 
 #Periodic Survey Settings - Large Event (satellite proxy) 
-survey_interval_sat =180 #return period for the tech in days
+survey_interval_sat =90 #return period for the tech in days
 survey_sites_sat = 500 #how many sites are observed each survey day 
 survey_cost_sat = 100 #USD/Site cost for the survey
 survey_ophrs_sat = {'begin': 9, 'end': 16}
@@ -100,10 +102,10 @@ def define_emitters():
     # Generates reparable fugitive emissions
     comp_leak = feast.EmissionSimModules.infrastructure_classes.Component(
         name='Comp_Leaks',
-        emission_data_path= emission_distribution_leaks,
-        emission_per_comp= comp_emissions_start_leaks,  # Fraction of components expected to be emitting at the beginning of the simulation.
-        emission_production_rate= comp_emissions_rate_leaks,  # number of new emissions per component per day
-        repair_cost_path= repair_cost_distribution,
+        emission_data_path= copy.deepcopy(emission_distribution_leaks),
+        emission_per_comp= copy.deepcopy(comp_emissions_start_leaks),  # Fraction of components expected to be emitting at the beginning of the simulation.
+        emission_production_rate= copy.deepcopy(comp_emissions_rate_leaks),  # number of new emissions per component per day
+        repair_cost_path= copy.deepcopy(repair_cost_distribution),
         base_reparable=True,
         null_repair_rate = 0.00000
     )
@@ -111,21 +113,21 @@ def define_emitters():
     # Generates reparable tank emissions
     comp_tank = feast.EmissionSimModules.infrastructure_classes.Component(
         name='Comp_Tanks',
-        emission_data_path= emission_distribution_tanks,
-        emission_per_comp= comp_emissions_start_tanks,  # Fraction of components expected to be emitting at the beginning of the simulation.
-        emission_production_rate= comp_emissions_rate_tanks,  # number of new emissions per component per day
-        repair_cost_path= repair_cost_distribution,
+        emission_data_path= copy.deepcopy(emission_distribution_tanks),
+        emission_per_comp= copy.deepcopy(comp_emissions_start_tanks),  # Fraction of components expected to be emitting at the beginning of the simulation.
+        emission_production_rate= copy.deepcopy(comp_emissions_rate_tanks),  # number of new emissions per component per day
+        repair_cost_path= copy.deepcopy(repair_cost_distribution),
         base_reparable= True,
         null_repair_rate = 0.00000
     )
 
-    # Generates reparable tank emissions
+    # Generates reparable Super Emitter emissions
     comp_super = feast.EmissionSimModules.infrastructure_classes.Component(
         name='Comp_Super',
-        emission_data_path= emission_distribution_super,
-        emission_per_comp= comp_emissions_start_super,  # Fraction of components expected to be emitting at the beginning of the simulation.
-        emission_production_rate= comp_emissions_rate_super,  # number of new emissions per component per day
-        repair_cost_path= repair_cost_distribution,
+        emission_data_path= copy.deepcopy(emission_distribution_super),
+        emission_per_comp= copy.deepcopy(comp_emissions_start_super),  # Fraction of components expected to be emitting at the beginning of the simulation.
+        emission_production_rate= copy.deepcopy(comp_emissions_rate_super),  # number of new emissions per component per day
+        repair_cost_path= copy.deepcopy(repair_cost_distribution),
         base_reparable= True,
         null_repair_rate = 0.00000
     )
@@ -204,93 +206,96 @@ def define_detection_methods(timeobj):
     """
     Define detection methods to be used in LDAR programs
     :param timeobj: A time object for simulation settings
-    :return ogi: A component survey method representing OGI with periodic surveys
-    :return ogi_no_survey: A component survey method representing OGI deployed by a site-level detection method
-    :return plane: A site survey method representing a plane based detection program with periodic surveys
-    :return cont_monitor: A site monitor method representing continuous monitors deployed at a site
-    :return rep0: A repair method with 0 delay between detection and repair
-    :return rep7: A repair method with a delay of 7 days between detection and repair
+    :return RD_ogi: repair delay for OGI, set days between detection and repair
+    :return RD_survey: repair delay for OGI, set days between detection and repair
+    :return RD_satellite: repair delay for OGI, set days between detection and repair 
+    :return ogi_quarterly: a component survey representing quarterly ogi surveys.
+    :return ogi_called_survey: a component survey representing ogi called by a periodic technology
+    :return ogi_called_survey_sat: a component survey representing ogi called by a satellite overflight
+    :return periodic_survey: a site survey representing a periodic technology
+    :return large_event_survey: a site survey representing a satellite flyover 
+
     """
     #Setting the return delays: 
-    RD_ogi = Dm.repair.Repair(repair_delay = OGI_rep_delay)
-    RD_survey = Dm.repair.Repair(repair_delay = survey_rep_delay)
-    RD_satellite = Dm.repair.Repair(repair_delay = sat_rep_delay)
+    RD_ogi = Dm.repair.Repair(repair_delay = copy.deepcopy(OGI_rep_delay))
+    RD_survey = Dm.repair.Repair(repair_delay = copy.deepcopy(survey_rep_delay))
+    RD_satellite = Dm.repair.Repair(repair_delay = copy.deepcopy(sat_rep_delay))
 
 
     
     ogi_quarterly = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=91,
-        survey_speed= survey_speed_comp_ogi,
-        ophrs= survey_ophrs_ogi,
-        labor= suvey_labor_cost_ogi,
+        survey_speed= copy.deepcopy(survey_speed_comp_ogi),
+        ophrs= copy.deepcopy(survey_ophrs_ogi),
+        labor= copy.deepcopy(suvey_labor_cost_ogi),
         detection_variables={'flux': 'mean'},
-        detection_probability_points= ogi_detection_points,
-        detection_probabilities= ogi_detection_probabilities,
-        dispatch_object= RD_ogi,
+        detection_probability_points= copy.deepcopy(ogi_detection_points),
+        detection_probabilities= copy.deepcopy(ogi_detection_probabilities),
+        dispatch_object= copy.deepcopy(RD_ogi),
         site_queue=[],
     )
     ogi_called_survey = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=None,
-        survey_speed=survey_speed_comp_ogi,
-        ophrs=survey_ophrs_ogi,
-        labor=suvey_labor_cost_ogi,
+        survey_speed=copy.deepcopy(survey_speed_comp_ogi),
+        ophrs=copy.deepcopy(survey_ophrs_ogi),
+        labor=copy.deepcopy(suvey_labor_cost_ogi),
         detection_variables={'flux': 'mean'},
-        detection_probability_points=ogi_detection_points,
-        detection_probabilities= ogi_detection_probabilities,
-        dispatch_object= RD_survey,
+        detection_probability_points=copy.deepcopy(ogi_detection_points),
+        detection_probabilities= copy.deepcopy(ogi_detection_probabilities),
+        dispatch_object= copy.deepcopy(RD_survey),
         site_queue=[],
     )
     ogi_called_survey_sat = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=None,
-        survey_speed=survey_speed_comp_ogi,
-        ophrs=survey_ophrs_ogi,
-        labor=suvey_labor_cost_ogi,
+        survey_speed=copy.deepcopy(survey_speed_comp_ogi),
+        ophrs=copy.deepcopy(survey_ophrs_ogi),
+        labor=copy.deepcopy(suvey_labor_cost_ogi),
         detection_variables={'flux': 'mean'},
-        detection_probability_points=ogi_detection_points,
-        detection_probabilities= ogi_detection_probabilities,
-        dispatch_object= RD_satellite,
+        detection_probability_points=copy.deepcopy(ogi_detection_points),
+        detection_probabilities= copy.deepcopy(ogi_detection_probabilities),
+        dispatch_object= copy.deepcopy(RD_satellite),
         site_queue=[],
     )
     ogi_annual_survey = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=365,
-        survey_speed=survey_speed_comp_ogi,
-        ophrs=survey_ophrs_ogi,
-        labor=suvey_labor_cost_ogi,
+        survey_speed=copy.deepcopy(survey_speed_comp_ogi),
+        ophrs=copy.deepcopy(survey_ophrs_ogi),
+        labor=copy.deepcopy(suvey_labor_cost_ogi),
         detection_variables={'flux': 'mean'},
-        detection_probability_points=ogi_detection_points,
-        detection_probabilities= ogi_detection_probabilities,
-        dispatch_object= RD_ogi,
+        detection_probability_points=copy.deepcopy(ogi_detection_points),
+        detection_probabilities= copy.deepcopy(ogi_detection_probabilities),
+        dispatch_object= copy.deepcopy(RD_ogi),
         site_queue=[],
     )
     
     periodic_survey = Dm.site_survey.SiteSurvey(
         timeobj,
-        survey_interval=survey_interval_periodic,
-        sites_per_day=survey_sites_periodic,
-        site_cost=survey_cost_periodic,
+        survey_interval=copy.deepcopy(survey_interval_periodic),
+        sites_per_day=copy.deepcopy(survey_sites_periodic),
+        site_cost=copy.deepcopy(survey_cost_periodic),
         detection_variables={'flux': 'mean'},
-        detection_probability_points=periodic_detection_points,
-        detection_probabilities=periodic_detection_probabilities,
-        dispatch_object=ogi_called_survey,
+        detection_probability_points=copy.deepcopy(periodic_detection_points),
+        detection_probabilities=copy.deepcopy(periodic_detection_probabilities),
+        dispatch_object=copy.deepcopy(ogi_called_survey),
         site_queue=[],
-        ophrs=survey_ophrs_periodic
+        ophrs=copy.deepcopy(survey_ophrs_periodic)
     )
 
     large_event_survey = Dm.site_survey.SiteSurvey(
         timeobj,
-        survey_interval=survey_interval_sat,
-        sites_per_day=survey_sites_sat,
-        site_cost=survey_cost_sat,
+        survey_interval=copy.deepcopy(survey_interval_sat),
+        sites_per_day=copy.deepcopy(survey_sites_sat),
+        site_cost=copy.deepcopy(survey_cost_sat),
         detection_variables={'flux': 'mean'},
-        detection_probability_points=sat_detection_points,
-        detection_probabilities=sat_detection_probabilities,
-        dispatch_object=ogi_called_survey_sat,
+        detection_probability_points=copy.deepcopy(sat_detection_points),
+        detection_probabilities=copy.deepcopy(sat_detection_probabilities),
+        dispatch_object=copy.deepcopy(ogi_called_survey_sat),
         site_queue=[],
-        ophrs=survey_ophrs_sat
+        ophrs=copy.deepcopy(survey_ophrs_sat)
     )
 
     #### 
@@ -302,24 +307,35 @@ def define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_s
     """
     Define LDAR programs using the detection and repair methods defined previously
     :param gas_field: Emission simulation settings
-    :param ogi:  component survey method representing OGI with periodic surveys
-    :param ogi_no_survey: A component survey method representing OGI deployed by a site-level detection method
-    :param plane_survey: A site survey method representing a plane based detection program with periodic surveys
-    :param cont_monitor: A site monitor method representing continuous monitors deployed at a site
-    :param rep0: A repair method with 0 delay between detection and repair
-    :param rep7: A repair method with a delay of 7 days between detection and repair
+    :param ogi_survery:  a quarterly OGI survey. 
+    :param periodic_survey_LDAR: a periodic technology which calls an OGI followup
+    :param periodic_survey_annual_LDAR: a periodic technology which calls OGI followup, and includes a seperate annual OGI survey. 
+    :param periodic_survey_satellite_LDAR: a periodic technology which calls OGI followup, layered with a satellite survey which calls OGI survey.
+    :param periodic_survey_satellite_annual_LDAR: periodic technology with OGI followup, satellite survey with OGI followup, and a seperate annual OGI survey. 
     :return ldar_dict: A dict of LDAR programs to be simulated
     """
-    # Add dispatch methods and site specific conditions to detection methods
-    # Good practice to use copies so that LDAR programs do not interfere with eachother in the simulation
-    # ogi.dispatch_object = copy.deepcopy(rep0)
-    # ogi_no_survey.dispatch_object = copy.deepcopy(rep0)
-    # plane_ogi = copy.deepcopy(ogi_no_survey)
-    # plane_ogi2 = copy.deepcopy(ogi_no_survey2)
-    # plane_survey.dispatch_object = plane_ogi
-    # plane_survey2.dispatch_object = plane_ogi2
- 
+
     # Define LDAR programs
+
+    #Okay, trying something from the RTI code...I think you can only call each detection method once without doing a copy function. 
+    #this is so dumb. 
+    # periodic_survey_do = copy.deepcopy(ogi_called_survey)
+    periodic_survey_annual = copy.deepcopy(periodic_survey)
+    # periodic_survey_annual.dispatch_object = copy.deepcopy(ogi_called_survey)
+    # periodic_survey_annual_do = copy.deepcopy(ogi_called_survey)
+    periodic_satellite = copy.deepcopy(periodic_survey)
+    # periodic_satellite.dispatch_object = copy.deepcopy(ogi_called_survey)
+    # periodic_satellite_do = copy.deepcopy(ogi_called_survey)
+    periodic_satellite_sat = copy.deepcopy(large_event_survey)
+    # periodic_satellite_sat.dispatch_object = copy.deepcopy(ogi_called_survey_sat)
+    # periodic_satellite_sat_do = copy.deepcopy(ogi_called_survey_sat)
+    periodic_satellite_annual = copy.deepcopy(periodic_survey)
+    # periodic_satellite_annual.dispatch_object = copy.deepcopy(ogi_called_survey)
+    # periodic_satellite_annual_do = copy.deepcopy(ogi_called_survey)
+    periodic_satellite_sat_annual = copy.deepcopy(large_event_survey)
+    # periodic_satellite_sat_annual.dispatch_object = copy.deepcopy(ogi_called_survey_sat)
+    # periodic_satellite_sat_annual_do = copy.deepcopy(ogi_called_survey_sat)
+
 
     #quarterly OGI 
     ogi_survey = Dm.ldar_program.LDARProgram(
@@ -336,36 +352,37 @@ def define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_s
 
     # periodic survey with annual ogi
     tech_dict = {
-        'periodic': periodic_survey,
-        'called_ogi': periodic_survey.dispatch_object,
+        'periodic': periodic_survey_annual,
+        'called_ogi': periodic_survey_annual.dispatch_object,
         'annual_ogi': ogi_annual_survey
     }
     periodic_survey_annual_LDAR = Dm.ldar_program.LDARProgram(
         copy.deepcopy(gas_field), tech_dict,
     )
 
+    # periodic survey with Satellites, no annual ogi
+    tech_dict = {
+        'periodic': periodic_satellite,
+        'called_ogi': periodic_satellite.dispatch_object,
+        'satellite': periodic_satellite_sat,
+        'satellite_ogi': periodic_satellite_sat.dispatch_object,
+    }
+    periodic_survey_satellite_LDAR = Dm.ldar_program.LDARProgram(
+        copy.deepcopy(gas_field), tech_dict,
+    )
+
     # periodic survey with Satellites and annual ogi
     tech_dict = {
-        'periodic': periodic_survey,
-        'called_ogi': periodic_survey.dispatch_object,
-        'satellite': large_event_survey,
-        'satellite_ogi': large_event_survey.dispatch_object,
-        'annual_ogi': ogi_annual_survey
+        'periodic': periodic_satellite_annual,
+        'called_ogi': periodic_satellite_annual.dispatch_object,
+        'satellite': periodic_satellite_sat_annual,
+        'satellite_ogi': periodic_satellite_sat_annual.dispatch_object,
+        'annual_ogi': copy.deepcopy(ogi_annual_survey)
     }
     periodic_survey_satellite_annual_LDAR = Dm.ldar_program.LDARProgram(
         copy.deepcopy(gas_field), tech_dict,
     )
 
-    # periodic survey with Satellites, no annual ogi
-    tech_dict = {
-        'periodic': periodic_survey,
-        'called_ogi': periodic_survey.dispatch_object,
-        'satellite': large_event_survey,
-        'satellite_ogi': large_event_survey.dispatch_object,
-    }
-    periodic_survey_satellite_LDAR = Dm.ldar_program.LDARProgram(
-        copy.deepcopy(gas_field), tech_dict,
-    )
 
     # Combine All programs into a directory: 
     ldar_dict = {
@@ -385,7 +402,7 @@ for iter in cadence_values:
     #set the cadendce in days:
     survey_interval_periodic = cadence_values[iter]
     #and the folder name:
-    write_folder = write_out_location + '/Loop_2_kg_' + str(iter) + '_' + str(survey_interval_periodic)
+    write_folder = write_out_location + '/Loop_'+ str(Set_periodic_threshold)+ '_kg_' + str(iter) + '_' + str(survey_interval_periodic)
 
     os.mkdir(write_folder)
 
@@ -398,7 +415,7 @@ for iter in cadence_values:
         ogi_quarterly, ogi_called_survey, ogi_called_survey_sat, ogi_annual_survey, periodic_survey, large_event_survey = define_detection_methods(timeobj) 
         ldar_dict = define_ldar_programs(gas_field, ogi_quarterly, ogi_annual_survey, periodic_survey, large_event_survey)
         scenario = sc.Scenario(time=timeobj, gas_field=gas_field, ldar_program_dict=ldar_dict)
-        scenario.run(dir_out=write_folder, display_status=True, save_method='json')
+        scenario.run(dir_out=write_folder, display_status=False, save_method='json')
 
 b = time.time()
 print("run time {:0.2f} seconds".format(b - a))
