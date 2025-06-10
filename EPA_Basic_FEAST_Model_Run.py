@@ -385,7 +385,7 @@ for iter in cadence_values:
     #set the cadendce in days:
     survey_interval_periodic = cadence_values[iter]
     #and the folder name:
-    write_folder = write_out_location + '/Loop_2kg_' + str(iter)
+    write_folder = write_out_location + '/Loop_2_kg_' + str(iter) + '_' + str(survey_interval_periodic)
 
     os.mkdir(write_folder)
 
