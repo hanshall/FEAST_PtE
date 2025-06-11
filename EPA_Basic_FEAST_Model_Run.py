@@ -6,9 +6,11 @@ Running: Python 3.12.4
 
 V1.0 Date: 2025-06
 v1.5 Date: 2025-06
+v1.6 Date: 2025-06
 
 Updates Tracking List: 
-V1.5 - adding copy.deepcopy to all of the called variables to prevent crosstalk, especially in the LDAR definitions.   
+V1.5 - adding copy.deepcopy to all of the called variables to prevent crosstalk, especially in the LDAR definitions. 
+V1.6 - updating parameters to reflect setup from UT (Arvind, Haojun) Including modeing out super emitters as episodic emissions 
 """
 import numpy as np #v2.2.3
 import copy
@@ -26,8 +28,8 @@ from scipy.special import erf #v1.15.2
 # USER INPUT
 sim_years = 5 #how many years should the simulation be run for? - Note- delta is 1 day, set inside define_time_settings  
 n_montecarlo = 10 #How many iterations of the model are we running? 
-write_out_location = 'EPA_Trial_Run/run_results_loop_test'
-Set_periodic_threshold = 5 #detection threshold of the periodic survey in kg/hr 
+write_out_location = 'EPA_Trial_Run/run_results_loop_test_v2'
+Set_periodic_threshold = 1 #detection threshold of the periodic survey in kg/hr 
 
 #LOOPING INSTRUCTIONS
 cadence_values = {'monthly': 30, 'bimonthly': 60, 'quarterly': 91, 'semiannual':182, 'annual': 365}
@@ -43,18 +45,21 @@ repair_cost_distribution = 'EPA_Trial_Run/Setup_Files/fernandez_leak_repair_cost
 
 # General Leaks 
 emission_distribution_leaks = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.p'
-comp_emissions_start_leaks = (0.5/96 + 0.0000001) #Fraction of components expected to be emissting at the beginnging of the simulation
-comp_emissions_rate_leaks = (0.005 / 365) # number of new emissions per component per day
+comp_emissions_start_leaks = ((4/96)+ 0.0000001) #Fraction of components expected to be emissting at the beginnging of the simulation
+comp_emissions_rate_leaks = ((0.5/100) / 365) # number of new emissions per component per day
 
 #Tank Leaks (midsized low pressure equiptment)
 emission_distribution_tanks = 'EPA_Trial_Run/Setup_Files/Comp_Tanks.p'
-comp_emissions_start_tanks = (3/96 + 0.0000001) #Fraction of components expected to be emissting at the beginnging of the simulation
-comp_emissions_rate_tanks = (0.025 / 365) # number of new emissions per component per day
+comp_emissions_start_tanks = ((4/96) + 0.0000001) #Fraction of components expected to be emissting at the beginnging of the simulation
+comp_emissions_rate_tanks = ((2.5/100) / 365) # number of new emissions per component per day
 
 #Super Emitters 
-emission_distribution_super = 'EPA_Trial_Run/Setup_Files/Comp_Super.p'
-comp_emissions_start_super = (0.5/96 + 0.0000001) #Fraction of components expected to be emissting at the beginnging of the simulation
-comp_emissions_rate_super = (0.015 / 365) # number of new emissions per component per day
+# emission_distribution_super = 'EPA_Trial_Run/Setup_Files/Comp_Super.p' #A list of emission sizes to draw from for episodic emissions (g/s)
+emission_distribution_super = json.load(open('EPA_Trial_Run/Setup_Files/Comp_Super.json' ))#A list of emission sizes to draw from for episodic emissions (g/s)
+comp_emissions_per_day = ((5/100) / 365 ) #The average frequency at which episodic emissions occur (1/days)
+comp_emissions_duration = 0.5  #The duration of episodic emissions (days)
+comp_emissions_start_super = 0 #Fraction of components expected to be emissting at the beginnging of the simulation
+comp_emissions_rate_super = 0 # number of new emissions per component per day
 
 #TECHNOLOGY SETUP 
 # All technologies have: detection_variables={'flux': 'mean'}, and site_queue = [] 
@@ -75,7 +80,7 @@ ogi_detection_probabilities= np.array([0, 0.25, 0.5, 0.75, 1]) #Detecion Distrib
 survey_sites_periodic = 100 #how many sites are observed each survey day 
 survey_cost_periodic = 100 #USD/Site cost for the survey
 survey_ophrs_periodic = {'begin': 8, 'end': 17}
-periodic_detection_points = np.array([0.347, 0.521, 0.694, 1.042, 1.389]) #detection Distribution, g/s
+periodic_detection_points = np.array([0.069, 0.105, 0.139, 0.208, 0.278]) #detection Distribution, g/s
 periodic_detection_probabilities = np.array([0, 0.25, 0.5, 0.75, 1]) #Detecion Distribution, probabilities
 
 #Periodic Survey Settings - Large Event (satellite proxy) 
@@ -124,7 +129,9 @@ def define_emitters():
     # Generates reparable Super Emitter emissions
     comp_super = feast.EmissionSimModules.infrastructure_classes.Component(
         name='Comp_Super',
-        emission_data_path= copy.deepcopy(emission_distribution_super),
+        episodic_emission_sizes= copy.deepcopy(emission_distribution_super), # no inputs to the emission_data_path, instead point distribution to episodi emissions.
+        episodic_emission_per_day = copy.deepcopy(comp_emissions_per_day), #average frequency of the episodic emissions/day
+        episodic_emission_duration = copy.deepcopy(comp_emissions_duration), #how long are the periodic super emitters lasting.
         emission_per_comp= copy.deepcopy(comp_emissions_start_super),  # Fraction of components expected to be emitting at the beginning of the simulation.
         emission_production_rate= copy.deepcopy(comp_emissions_rate_super),  # number of new emissions per component per day
         repair_cost_path= copy.deepcopy(repair_cost_distribution),

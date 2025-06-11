@@ -16,6 +16,7 @@ import pickle
 import numpy as np
 from os.path import dirname, abspath
 import os
+import json
 
 
 # ----------- Set up and load in the files I want to modify and pickle 
@@ -27,6 +28,7 @@ file_in_super = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.csv'
 file_out_leaks = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.p'
 file_out_tanks = 'EPA_Trial_Run/Setup_Files/Comp_Tanks.p'
 file_out_super = 'EPA_Trial_Run/Setup_Files/Comp_Super.p'
+file_out_super_json = 'EPA_Trial_Run/Setup_Files/Comp_Super.json'
 
 #yes I know that this is the dumbest way to do this, it's fine. I'm babystepping through python on this one. 
 
@@ -105,6 +107,8 @@ comp_counts = {'All': 650}  # Assumed components per well
 emissions_super.define_data(leak_data=leak_data, well_counts=well_counts, comp_counts=comp_counts)
 
 pickle.dump(emissions_super, open(file_out_super, 'wb'))
+
+json.dump(list(comp_super), open(file_out_super_json, 'w'))
 
 
 print('Successfully completed production-emission-data processing.')
