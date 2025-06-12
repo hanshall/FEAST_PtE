@@ -20,10 +20,9 @@ import json
 
 
 # ----------- Set up and load in the files I want to modify and pickle 
-
 file_in_leaks = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.csv'
-file_in_tanks = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.csv'
-file_in_super = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.csv'
+file_in_tanks = 'EPA_Trial_Run/Setup_Files/Comp_tanks.csv'
+file_in_super = 'EPA_Trial_Run/Setup_Files/Comp_super.csv'
 
 file_out_leaks = 'EPA_Trial_Run/Setup_Files/Comp_Leaks.p'
 file_out_tanks = 'EPA_Trial_Run/Setup_Files/Comp_Tanks.p'
