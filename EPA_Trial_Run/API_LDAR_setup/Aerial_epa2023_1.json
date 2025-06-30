@@ -1,0 +1,20 @@
+{
+  "type": "site_survey",
+  "time": "None",
+  "survey_interval": 91,
+  "sites_per_day": 1000,
+  "site_cost": 0,
+  "dispatch_object": "None",
+  "site_queue": [],
+  "ophrs": {"begin": 8, "end": 17},
+  "dispatch_threshold": "None",
+  "sensitivity": 0.001,
+  "detection_probability_points": [
+    [0.07, 0.105, 0.14, 0.21, 0.28]
+  ],
+  "detection_probabilities": [0, 0.25, 0.5, 0.75, 1],
+  "detection_variables": {
+    "flux": "mean"
+  },
+  "op_envelope": "None"
+}

@@ -17,7 +17,7 @@ from scipy.special import erf
 ###############################################################################
 # USER INPUT
 mpStr = 'Model Plant 4'
-n_montecarlo = 500
+n_montecarlo = 10
 
 ###############################################################################
 
@@ -318,7 +318,7 @@ for ind in range(n_montecarlo):
     ogi, ogi_no_survey, plane_survey, plane_survey2, cont_monitor, rep0, rep7, ogi_no_survey2 = define_detection_methods(timeobj) #### RS EDIT (5/18/22)
     ldar_dict = define_ldar_programs(gas_field, ogi, ogi_no_survey, plane_survey, plane_survey2, cont_monitor, rep0, rep7, ogi_no_survey2) #### RS EDIT (5/18/22)
     scenario = sc.Scenario(time=timeobj, gas_field=gas_field, ldar_program_dict=ldar_dict)
-    scenario.run(dir_out='EPA_Trial_Run/Run_Results', display_status=True, save_method='json')
+    scenario.run(dir_out='EPA_Trial_Run/RTI_Run_Results', display_status=True, save_method='json')
 
 b = time.time()
 print("run time {:0.2f} seconds".format(b - a))
