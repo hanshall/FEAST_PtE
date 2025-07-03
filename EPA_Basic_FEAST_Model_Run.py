@@ -29,7 +29,7 @@ from scipy.special import erf #v1.15.2
 # USER INPUT
 sim_years = 5 #how many years should the simulation be run for? - Note- delta is 1 day, set inside define_time_settings  
 n_montecarlo = 10 #How many iterations of the model are we running? 
-write_out_location = 'EPA_Trial_Run/run_results_loop_test_corrected_distributions'
+write_out_location = 'EPA_Trial_Run/check'#'EPA_Trial_Run/run_results_loop_test_corrected_distributions'
 Set_periodic_threshold = 5 #detection threshold of the periodic survey in kg/hr 
 
 #LOOPING INSTRUCTIONS
@@ -244,6 +244,7 @@ def define_detection_methods(timeobj):
         dispatch_object= copy.deepcopy(RD_ogi),
         site_queue=[],
     )
+
     ogi_called_survey = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=None,
@@ -256,6 +257,7 @@ def define_detection_methods(timeobj):
         dispatch_object= copy.deepcopy(RD_survey),
         site_queue=[],
     )
+
     ogi_called_survey_sat = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=None,
@@ -268,6 +270,7 @@ def define_detection_methods(timeobj):
         dispatch_object= copy.deepcopy(RD_satellite),
         site_queue=[],
     )
+    
     ogi_annual_survey = Dm.comp_survey.CompSurvey(
         timeobj,
         survey_interval=365,
